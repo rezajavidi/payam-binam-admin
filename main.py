@@ -1,20 +1,21 @@
-from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
-import os
+from aiogram import Bot, Dispatcher
+from aiogram.types import Message
+from aiogram.enums import ParseMode
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.strategy import FSMStrategy
+from aiogram import F
+import asyncio
 
-app = FastAPI()
-templates = Jinja2Templates(directory="admin_panel/templates")
+from config import BOT_TOKEN
+from handlers import user, message_router
+from db.database import init_db
 
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "Salam@123")
+async def main():
+    await init_db()
+    bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+    dp = Dispatcher(storage=MemoryStorage(), fsm_strategy=FSMStrategy.SIMPLE)
+    dp.include_routers(user.router, message_router.router)
+    await dp.start_polling(bot)
 
-@app.get("/admin", response_class=HTMLResponse)
-async def admin_login(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
-
-@app.post("/admin", response_class=HTMLResponse)
-async def admin_login_post(request: Request, password: str = Form(...)):
-    if password == ADMIN_PASSWORD:
-        return templates.TemplateResponse("dashboard.html", {"request": request})
-    return RedirectResponse("/admin", status_code=303)
+if __name__ == "__main__":
+    asyncio.run(main())
