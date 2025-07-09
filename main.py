@@ -1,21 +1,28 @@
-from aiogram import Bot, Dispatcher
-from aiogram.types import Message
-from aiogram.enums import ParseMode
-from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.fsm.strategy import FSMStrategy
-from aiogram import F
-import asyncio
 
-from config import BOT_TOKEN
-from handlers import user, message_router
-from db.database import init_db
+from fastapi import FastAPI, Request, Form, Depends, HTTPException
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
-async def main():
-    await init_db()
-    bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
-    dp = Dispatcher(storage=MemoryStorage(), fsm_strategy=FSMStrategy.SIMPLE)
-    dp.include_routers(user.router, message_router.router)
-    await dp.start_polling(bot)
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-if __name__ == "__main__":
-    asyncio.run(main())
+USERNAME = "admin"
+PASSWORD = "Salam@123"
+
+def check_credentials(username: str = Form(...), password: str = Form(...)):
+    if username != USERNAME or password != PASSWORD:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    return True
+
+@app.get("/", response_class=HTMLResponse)
+async def login_form(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.post("/admin", response_class=HTMLResponse)
+async def login(
+    request: Request,
+    valid: bool = Depends(check_credentials)
+):
+    return templates.TemplateResponse("dashboard.html", {"request": request})
