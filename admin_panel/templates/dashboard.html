@@ -1,1 +1,14 @@
-<html><body><h2>Dashboard</h2><p>Welcome to Admin Panel</p></body></html>
+
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Admin Users</title></head>
+<body>
+<h2>کاربران ثبت‌شده</h2>
+<table border="1">
+<tr><th>ID</th><th>نام</th><th>یوزرنیم</th><th>زمان عضویت</th></tr>
+{% for u in users %}
+<tr><td>{{ u[1] }}</td><td>{{ u[2] }}</td><td>{{ u[3] }}</td><td>{{ u[7] }}</td></tr>
+{% endfor %}
+</table>
+</body>
+</html>
